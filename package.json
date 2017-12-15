@@ -1,0 +1,23 @@
+{
+  "name": "bamazon",
+  "version": "1.0.0",
+  "description": "homework week 13 mySQL",
+  "main": "bamazonCustomer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Dancannon27/bamazon.git"
+  },
+  "author": "LiriHW",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Dancannon27/bamazon/issues"
+  },
+  "homepage": "https://github.com/Dancannon27/bamazon#readme",
+  "dependencies": {
+    "inquirer": "^4.0.1",
+    "mysql": "^2.15.0"
+  }
+}
