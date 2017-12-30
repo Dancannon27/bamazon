@@ -1,81 +1,78 @@
 
 
+const connectObject = {
+    host: 'localhost',
+    port: 3306,
+    user: 'root',
+    password: '',
+    database: 'bamazon'
+}
+
 var inquirer = require("inquirer");
 
 var mysql = require("mysql");
 
-var connection = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : '',
-    database : 'bamazon'
-  });
-   
-  var firstQuestion = [{
-    name: "firstQ",
-    type: "input",
-    message: "What product number would you like to purchase?",
-}]
+var connection = mysql.createConnection(connectObject);
 
-var secondQuestion = [{
-    name: "secondQ",
-    type: "input",
-    message: "How many would you like to purchase?",
-}]
-
-
-
-
-  connection.connect();
-  connection.query("SELECT * FROM products", function (err, results) {
-      if (err) {
-          throw err 
-         };
-      for (var i = 0; i < results.length; i++){
-          console.log(results[i].item_id + " " + results[i].product_name + " $" + results[i].price_cost);    
-      }
-      getProducts();
-    });
-
-    
-      function getProducts() {
-        inquirer.prompt(firstQuestion).then(answers => {
-            console.log(answers);
-            var stock = stockQuantity(parseInt(answers.firstQ));
-             console.log("here");
-        })
+connection.connect();
+var query = "SELECT * FROM products";
+connection.query(query, function (err, results) {
+    if (err) {
+        throw err
+    };
+    for (var i = 0; i < results.length; i++) {
+        console.log(`Product Number: ${results[i].item_id} \nItem: ${results[i].product_name} \nPrice: $${results[i].price_cost}`);
     }
-        function stockQuantity(id) {
-            connection.query("select stock_quantity from products where ?", {item_id: id}, function(err, results){
+    inquirer.prompt([
+        {
+            type: "input",
+            message: "What Product Number would you like to purchase?",
+            name: "itemID"
+        },
+        {
+            type: "input",
+            message: "How many would you like to purchase?",
+            name: "quantity"
+        }
+    ])
+
+        .then(function (inquirerResults) {
+            var item = "SELECT stock_quantity FROM products WHERE item_id =" + inquirerResults.quantity + ";";
+            connection.query(item, function (err, results) {
                 if (err) {
                     throw err
                 }
-                console.log(results[0]);
-                return results[0];
+                if (results[0].stock_quantity < inquirerResults.quantity) {
+                    console.log("Insuffiencent Quantity");
+                } else {
+                    purchase(results[0].stock_quantity, inquirerResults.quantity, inquirerResults.itemID )
+                }
+
+            })
+        })
+        function purchase(stock, customerQuantity, itemNum) {
+            
+            var newQuantity = stock - customerQuantity;
+            var updateQuantity = "UPDATE products SET stock_quantity = " + newQuantity + " WHERE item_id = " + itemNum + ";";
+            connection.query(updateQuantity, function(err, results) {
+                if (err) {
+                    throw err
+                }
+                console.log("successful order");
+                connection.query("SELECT price_cost FROM products WHERE item_id = " + itemNum + ";", 
+                    function(err, results) {
+                        if (err) {
+                            throw err
+                        }
+                        var totalCost = customerQuantity * results[0].price_cost;                        
+                    console.log("You Cart Total: $" + totalCost);
+                    connection.end();
+                    } )
             })
         }
+})
 
-        function getAmount() {
-            inquirer.prompt(secondQuestion).then(answers => {
-                console.log(answers);
-                // var stock = stockQuantity(parseInt(answers.firstQ));
-                //  console.log("here");
-            })
-        }
 
-    //    if (answers.firstQuestion > stockQuantity) {
-    //             console.log("Oops, not enough in stock!")
-    //         } else {
-    //             getStock();
-    //         }
-    //     })
-    // }
-    
-    // function getStock() {
-    //     inquirer.prompt(secondQuestion).then(answers => {
-    //         for (var i = 0; i < results.length; i++) {
-    //             console.log("Thank you for your order of" + results[i].product_name)
-    //         }
-    //     })
-    // }
-//   connection.end();
+
+
+
